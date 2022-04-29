@@ -132,7 +132,7 @@ class Block:
         return self.name
 
     def enclosed_point(self, point, direction):
-        point = np.array(point) + 0.1 * np.array(direction)
+        point = np.array(point) + 0.5 * np.array(direction)
         test_line = Line(point, direction)
         counter = 0
         for edge in self.edges:
@@ -156,6 +156,18 @@ class Block:
         pygame.draw.polygon(shape_surf, self.colour, [(x - min_x, y-min_y) for x, y in self.vertices])
         surface.blit(shape_surf, target_rect)
 
+
+class Receiver(Block):
+    def __init__(self, name, refraction_index, init_colour, receive_colour, absorption_coeff, reflectivity, vertices):
+        super().__init__(name, refraction_index, init_colour, absorption_coeff, reflectivity, vertices)
+        self.init_colour = init_colour
+        self.receive_colour = receive_colour
+    
+    def change_colour(self, hit=False):
+        if not hit:
+            self.colour = self.init_colour
+        else:
+            self.colour = self.receive_colour
 
 class Map:
     def __init__(self, *blocks):
@@ -188,19 +200,23 @@ class Ray(Line):
         self.power = starting_power
         self.room_map = room_map
         self.medium = room_map.block_enclosed(start_point, direction)
+        self.hit_block = None
         self.boundary_hit, self.shortest_path = self.collision()
 
         self.end_point = self.start_point + 100 * self.direction
         if self.boundary_hit is not None:
             self.end_point = self.find_intersection_point(self.shortest_path)
+            self.hit_block = self.room_map.block_enclosed(self.end_point, self.direction)
 
     def move_start(self, new_start):
         self.change_start(new_start)
         self.medium = self.room_map.block_enclosed(self.start_point, self.direction)
+        self.hit_block = None
         self.boundary_hit, self.shortest_path = self.collision()
         self.end_point = self.start_point + 100 * self.direction
         if self.boundary_hit is not None:
             self.end_point = self.find_intersection_point(self.shortest_path)
+            self.hit_block = self.room_map.block_enclosed(self.end_point, self.direction)
 
     def collision(self):
         """Finds the boundary that is in the ray's path"""
@@ -223,8 +239,10 @@ class Ray(Line):
         self.change_direction(np.array(new_direction))
         self.boundary_hit, self.shortest_path = self.collision()
         self.end_point = self.start_point + 100 * self.direction
+        self.hit_block = None
         if self.boundary_hit is not None:
             self.end_point = self.find_intersection_point(self.shortest_path)
+            self.hit_block = self.room_map.block_enclosed(self.end_point, self.direction)
 
     def reflect(self):
         if self.boundary_hit is None:

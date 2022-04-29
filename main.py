@@ -1,7 +1,7 @@
 import numpy as np
 from bin_list import Node, BinTree
 import sys, pygame
-from line_classes import Ray, Block, Map
+from line_classes import Ray, Block, Map, Receiver
 
 def find_direction(angle):
     return np.array([np.cos(angle*np.pi/180), np.sin(angle*np.pi/180)])
@@ -20,12 +20,26 @@ def trace_ray(ray_node: Node, iteration):
         trace_ray(reflected_node, iteration)
         trace_ray(refracted_node, iteration)    
 
-def get_all_rays(head_ray, iterations=3):
+def get_all_rays(head_ray, iterations=1):
     head_node = Node(head_ray)
     trace_ray(head_node, iterations)
     tree = BinTree(head_node)
     data_list = tree.get_data_list()
     return data_list
+
+def receiver_hit(med_list):
+    hit_list = []
+    for medium in med_list:
+        if isinstance(medium, Receiver):
+            hit_list.append(medium)
+    return hit_list
+
+def get_hit_medium(data_list):
+    hit_blocks = []
+    for ray in data_list:
+        if ray is not None:
+            hit_blocks += [ray.medium, ray.hit_block]
+    return hit_blocks
 
 
 #---------------------------------------------------------------------------------------------------------
@@ -48,10 +62,11 @@ square_2 = Block(
     vertices=((450,190),(900,190),(900,440),(450,440))
 )
 
-lens = Block(
+lens = Receiver(
     name="lens",
-    refraction_index=1.2,
-    colour = (255,255,255,255),
+    refraction_index=36,
+    init_colour = (255,255,255,255),
+    receive_colour=(100,100,100,255),
     absorption_coeff=1,
     reflectivity=0,
     vertices=((440, 400), (420, 340), (410, 280), (410, 220), (420, 160), (440, 100),
@@ -67,7 +82,8 @@ room = Block(
     vertices=((0,0), (1000,0), (1000, 500),(0,500))
 )
 # When blocks overlap, the block that is at define at the start of "Map" will matter the most
-room_map = Map(dish, room)
+room_map = Map(lens, room)
+all_receivers = [lens]
 #---------------------------------------------------------------------------------------------------------
 # Game variables
 pygame.init()
@@ -80,6 +96,14 @@ angle = 0
 position = [50, 50]
 light_ray = Ray(find_direction(angle), 1, position, room_map)
 data_list = get_all_rays(light_ray)
+hit_blocks = get_hit_medium(data_list)
+receivers_hit = receiver_hit(hit_blocks)
+for receiver in all_receivers:
+    if receiver in receivers_hit:
+        receiver.change_colour(hit=True)
+    else:
+        receiver.change_colour(hit=False)
+
 move_speed = 10
 down_key = False
 up_key = False
@@ -147,6 +171,14 @@ while True:
 
     if not all(up):
         data_list = get_all_rays(light_ray)
+        hit_blocks = get_hit_medium(data_list)
+        receivers_hit = receiver_hit(hit_blocks)
+        print(receivers_hit)
+        for receiver in all_receivers:
+            if receiver in receivers_hit:
+                receiver.change_colour(hit=True)
+            else:
+                receiver.change_colour(hit=False)
 
     pygame.draw.rect(surface, (0, 0, 0), (0, 0, screen_width, screen_height))
     
