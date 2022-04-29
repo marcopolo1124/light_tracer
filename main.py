@@ -48,8 +48,8 @@ square_2 = Block(
     vertices=((450,190),(900,190),(900,440),(450,440))
 )
 
-dish = Block(
-    name="dish",
+lens = Block(
+    name="lens",
     refraction_index=1.2,
     colour = (255,255,255,255),
     absorption_coeff=1,
