@@ -1,7 +1,6 @@
 import numpy as np
 from numpy.linalg import LinAlgError
-import pygame, sys
-from bin_list import Node, BinTree
+import pygame
 
 
 class Line:
