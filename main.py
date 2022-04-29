@@ -48,6 +48,16 @@ square_2 = Block(
     vertices=((450,190),(900,190),(900,440),(450,440))
 )
 
+dish = Block(
+    name="dish",
+    refraction_index=1.2,
+    colour = (255,255,255,255),
+    absorption_coeff=1,
+    reflectivity=0,
+    vertices=((440, 400), (420, 340), (410, 280), (410, 220), (420, 160), (440, 100),
+              (450, 100), (470, 160), (480, 220), (480, 280), (470, 340), (450, 400))
+)
+
 room = Block(
     name="room",
     refraction_index=1,
@@ -57,7 +67,7 @@ room = Block(
     vertices=((0,0), (1000,0), (1000, 500),(0,500))
 )
 # When blocks overlap, the block that is at define at the start of "Map" will matter the most
-room_map = Map(square, square_2, room)
+room_map = Map(dish, room)
 #---------------------------------------------------------------------------------------------------------
 # Game variables
 pygame.init()
