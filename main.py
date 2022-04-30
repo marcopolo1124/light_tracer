@@ -20,7 +20,7 @@ def trace_ray(ray_node: Node, iteration):
         trace_ray(reflected_node, iteration)
         trace_ray(refracted_node, iteration)    
 
-def get_all_rays(head_ray, iterations=1):
+def get_all_rays(head_ray, iterations=5):
     head_node = Node(head_ray)
     trace_ray(head_node, iterations)
     tree = BinTree(head_node)
@@ -55,7 +55,7 @@ square = Block(
 
 square_2 = Block(
     name="square2",
-    refraction_index=8,
+    refraction_index=1.2,
     colour=(0,255,0, 127),
     absorption_coeff=1,
     reflectivity=0,
@@ -82,7 +82,7 @@ room = Block(
     vertices=((0,0), (1000,0), (1000, 500),(0,500))
 )
 # When blocks overlap, the block that is at define at the start of "Map" will matter the most
-room_map = Map(lens, room)
+room_map = Map(square_2, room)
 all_receivers = [lens]
 #---------------------------------------------------------------------------------------------------------
 # Game variables

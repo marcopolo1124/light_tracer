@@ -132,7 +132,8 @@ class Block:
         return self.name
 
     def enclosed_point(self, point, direction):
-        point = np.array(point) + 0.5 * np.array(direction)
+        point = np.array(point) 
+        # + 0 * np.array(direction)
         test_line = Line(point, direction)
         counter = 0
         for edge in self.edges:
@@ -256,6 +257,7 @@ class Ray(Line):
             return None
         if self.boundary_hit.reflectivity == 1:
             return None
+
         block_enclosed = self.room_map.block_enclosed(self.end_point, self.direction)
         if block_enclosed is None:
             refraction_r = 1
