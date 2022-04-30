@@ -39,7 +39,7 @@ square_2 = Receiver(
 
 lens = Receiver(
     name="lens",
-    refraction_index=36,
+    refraction_index=1.2,
     init_colour = (255,255,255,255),
     receive_colour=(100,100,100,255),
     absorption_coeff=1,
@@ -57,7 +57,7 @@ room = Block(
     vertices=((0,0), (1000,0), (1000, 500),(0,500))
 )
 # When blocks overlap, the block that is at define at the start of "Map" will matter the most
-room_map = Map(square, square_2)
+room_map = Map(lens)
 #---------------------------------------------------------------------------------------------------------
 # Game variables
 pygame.init()
@@ -68,10 +68,10 @@ clock = pygame.time.Clock()
 
 angle = 0
 pos_1 = [50, 50]
-pos_2 = [50, 70]
-pos_3 = [50, 90]
-pos_4 = [50, 110]
-pos_5 = [50, 130]
+pos_2 = [50, 80]
+pos_3 = [50, 110]
+pos_4 = [50, 140]
+pos_5 = [50, 170]
 all_pos = [pos_1, pos_2, pos_3, pos_4, pos_5]
 
 
