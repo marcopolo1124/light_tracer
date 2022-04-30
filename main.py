@@ -91,16 +91,12 @@ def house_keeping(ray):
     receivers_hit = receiver_hit(hit_blocks)
     return data_list, receivers_hit
 
-l1, r1= house_keeping(ray_1)
-l2, r2 = house_keeping(ray_2)
-l3, r3 = house_keeping(ray_3)
-l4, r4 = house_keeping(ray_4)
-l5, r5 = house_keeping(ray_5)
-
-all_list = [l1, l2, l3, l4, l5]
-all_hits = r1 + r2 + r3 + r4 + r5
-
-print(all_hits)
+all_list = []
+all_hits = []
+for ray_i in all_rays:
+    li, ri = house_keeping(ray_i)
+    all_list.append(li)
+    all_hits += ri
 
 for receiver in room_map.receivers:
     if receiver in all_hits:
@@ -180,14 +176,12 @@ while True:
             ray_i.move_start(pos_i)
 
     if not all(up):
-        l1, r1= house_keeping(ray_1)
-        l2, r2 = house_keeping(ray_2)
-        l3, r3 = house_keeping(ray_3)
-        l4, r4 = house_keeping(ray_4)
-        l5, r5 = house_keeping(ray_5)
-
-        all_list = [l1, l2, l3, l4, l5]
-        all_hits = r1 + r2 + r3 + r4 + r5
+        all_list = []
+        all_hits = []
+        for ray_i in all_rays:
+            li, ri = house_keeping(ray_i)
+            all_list.append(li)
+            all_hits += ri
         for receiver in room_map.receivers:
             if receiver in all_hits:
                 receiver.change_colour(hit=True)
@@ -197,11 +191,8 @@ while True:
     pygame.draw.rect(surface, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
     
     room_map.draw_map(surface)
-    draw_all_ray(l1)
-    draw_all_ray(l2)
-    draw_all_ray(l3)
-    draw_all_ray(l4)
-    draw_all_ray(l5)
+    for li in all_list:
+        draw_all_ray(li)
 
     for pos_i in all_pos:
         pygame.draw.circle(surface, (255,255,255, 255), pos_i, 4)
