@@ -85,6 +85,8 @@ ray_4 = Ray(find_direction(angle), 1, pos_4, room_map)
 ray_5 = Ray(find_direction(angle), 1, pos_5, room_map)
 all_rays = [ray_1, ray_2, ray_3, ray_4, ray_5]
 
+ray_1_length = ray_1.shortest_path
+
 def house_keeping(ray):
     data_list = get_all_rays(ray)
     hit_blocks = get_hit_medium(data_list)
@@ -103,6 +105,10 @@ for receiver in room_map.receivers:
         receiver.change_colour(hit=True)
     else:
         receiver.change_colour(hit=False)
+
+
+print("length of head node in ray 1")
+print(ray_1_length)
 
 move_speed = 10
 down_key = False
