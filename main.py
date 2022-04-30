@@ -1,49 +1,23 @@
-import numpy as np
-from bin_list import Node, BinTree
-import sys, pygame
-from line_classes import Ray, Block, Map, Receiver
-
-def find_direction(angle):
-    return np.array([np.cos(angle*np.pi/180), np.sin(angle*np.pi/180)])
-
-def trace_ray(ray_node: Node, iteration):
-    if iteration == 0 or ray_node is None:
-        return None
-    iteration -= 1
-    ray_data = ray_node.data
-    if ray_data is not None:
-        reflected_ray = ray_data.reflect()
-        refracted_ray = ray_data.refract()
-        reflected_node = Node(reflected_ray)
-        refracted_node = Node(refracted_ray)
-        ray_node.add_point(reflected_node, refracted_node)
-        trace_ray(reflected_node, iteration)
-        trace_ray(refracted_node, iteration)    
-
-def get_all_rays(head_ray, iterations=5):
-    head_node = Node(head_ray)
-    trace_ray(head_node, iterations)
-    tree = BinTree(head_node)
-    data_list = tree.get_data_list()
-    return data_list
-
-def receiver_hit(med_list):
-    hit_list = []
-    for medium in med_list:
-        if isinstance(medium, Receiver):
-            hit_list.append(medium)
-    return hit_list
-
-def get_hit_medium(data_list):
-    hit_blocks = []
-    for ray in data_list:
-        if ray is not None:
-            hit_blocks += [ray.medium, ray.hit_block]
-    return hit_blocks
-
+import pygame, sys
+from block import Block, Map, Receiver, Ray
+from tracer import find_direction, get_all_rays, get_hit_medium, receiver_hit
 
 #---------------------------------------------------------------------------------------------------------
 # Create environment
+def get_square(top_left_corner, side_length):
+    corner1 = top_left_corner
+    corner2 = (top_left_corner[0] + side_length, top_left_corner[1])
+    corner3 = (top_left_corner[0] + side_length, top_left_corner[1] + side_length)
+    corner4 = (top_left_corner[0], top_left_corner[1] + side_length)
+    return (corner1, corner2, corner3, corner4)
+
+def draw_all_ray(data_list):
+    for ray_i in data_list:
+        if ray_i is not None:
+            ray_i.draw_ray(surface)
+
+square_coord = get_square((10,10), 50)
+
 square = Block(
     name="square",
     refraction_index=1.2,
@@ -53,13 +27,14 @@ square = Block(
     vertices=((10,140),(450,140),(450,390))
 )
 
-square_2 = Block(
+square_2 = Receiver(
     name="square2",
-    refraction_index=1.2,
-    colour=(0,255,0, 127),
+    refraction_index=36,
+    init_colour=(0,255,0, 127),
+    receive_colour=(0,100, 0, 127),
     absorption_coeff=1,
     reflectivity=0,
-    vertices=((450,190),(900,190),(900,440),(450,440))
+    vertices=square_coord
 )
 
 lens = Receiver(
@@ -82,24 +57,53 @@ room = Block(
     vertices=((0,0), (1000,0), (1000, 500),(0,500))
 )
 # When blocks overlap, the block that is at define at the start of "Map" will matter the most
-room_map = Map(square_2, room)
-all_receivers = [lens]
+room_map = Map(square, square_2)
 #---------------------------------------------------------------------------------------------------------
 # Game variables
 pygame.init()
-screen_width = 1000
-screen_height = 500
-surface = pygame.display.set_mode((screen_width, screen_height))
+WIDTH = 1000
+HEIGHT = 500
+surface = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
 angle = 0
-position = [50, 50]
-light_ray = Ray(find_direction(angle), 1, position, room_map)
-data_list = get_all_rays(light_ray)
-hit_blocks = get_hit_medium(data_list)
-receivers_hit = receiver_hit(hit_blocks)
-for receiver in all_receivers:
-    if receiver in receivers_hit:
+pos_1 = [50, 50]
+pos_2 = [50, 70]
+pos_3 = [50, 90]
+pos_4 = [50, 110]
+pos_5 = [50, 130]
+all_pos = [pos_1, pos_2, pos_3, pos_4, pos_5]
+
+
+iterations =5
+
+
+ray_1 = Ray(find_direction(angle), 1, pos_1, room_map)
+ray_2 = Ray(find_direction(angle), 1, pos_2, room_map)
+ray_3 = Ray(find_direction(angle), 1, pos_3, room_map)
+ray_4 = Ray(find_direction(angle), 1, pos_4, room_map)
+ray_5 = Ray(find_direction(angle), 1, pos_5, room_map)
+all_rays = [ray_1, ray_2, ray_3, ray_4, ray_5]
+
+def house_keeping(ray):
+    data_list = get_all_rays(ray)
+    hit_blocks = get_hit_medium(data_list)
+    receivers_hit = receiver_hit(hit_blocks)
+    return data_list, receivers_hit
+
+l1, r1= house_keeping(ray_1)
+l2, r2 = house_keeping(ray_2)
+l3, r3 = house_keeping(ray_3)
+l4, r4 = house_keeping(ray_4)
+l5, r5 = house_keeping(ray_5)
+
+all_list = [l1, l2, l3, l4, l5]
+all_hits = r1 + r2 + r3 + r4 + r5
+
+print(all_hits)
+
+for receiver in room_map.receivers:
+    if receiver in all_hits:
         receiver.change_colour(hit=True)
     else:
         receiver.change_colour(hit=False)
@@ -150,43 +154,57 @@ while True:
     up = [not n for n in down]
     if down_key:
         angle += 1
-        # print(light_ray)
-        light_ray.new_trajectory(find_direction(angle))
+        # print(ray_1)
+        for ray_j in all_rays:
+            ray_j.new_trajectory(find_direction(angle))
     if up_key:
         angle -= 1
-        light_ray.new_trajectory(find_direction(angle))
-        # print(light_ray)
+        for ray_j in all_rays:
+            ray_j.new_trajectory(find_direction(angle))
+        # print(ray_1)
     if w_key:
-        position[1] -= move_speed
-        light_ray.move_start(position)
+        for pos_i, ray_i in zip(all_pos, all_rays):
+            pos_i[1] -= move_speed
+            ray_i.move_start(pos_i)
     if s_key:
-        position[1] += move_speed
-        light_ray.move_start(position)
+        for pos_i, ray_i in zip(all_pos, all_rays):
+            pos_i[1] += move_speed
+            ray_i.move_start(pos_i)
     if a_key:
-        position[0] -= move_speed
-        light_ray.move_start(position)
+        for pos_i, ray_i in zip(all_pos, all_rays):
+            pos_i[0] -= move_speed
+            ray_i.move_start(pos_i)
     if d_key:
-        position[0] += move_speed
-        light_ray.move_start(position)
+        for pos_i, ray_i in zip(all_pos, all_rays):
+            pos_i[0] += move_speed
+            ray_i.move_start(pos_i)
 
     if not all(up):
-        data_list = get_all_rays(light_ray)
-        hit_blocks = get_hit_medium(data_list)
-        receivers_hit = receiver_hit(hit_blocks)
-        print(receivers_hit)
-        for receiver in all_receivers:
-            if receiver in receivers_hit:
+        l1, r1= house_keeping(ray_1)
+        l2, r2 = house_keeping(ray_2)
+        l3, r3 = house_keeping(ray_3)
+        l4, r4 = house_keeping(ray_4)
+        l5, r5 = house_keeping(ray_5)
+
+        all_list = [l1, l2, l3, l4, l5]
+        all_hits = r1 + r2 + r3 + r4 + r5
+        for receiver in room_map.receivers:
+            if receiver in all_hits:
                 receiver.change_colour(hit=True)
             else:
                 receiver.change_colour(hit=False)
 
-    pygame.draw.rect(surface, (0, 0, 0), (0, 0, screen_width, screen_height))
+    pygame.draw.rect(surface, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
     
     room_map.draw_map(surface)
-    for ray_i in data_list:
-        if ray_i is not None:
-            ray_i.draw_ray(surface)
-    pygame.draw.circle(surface, (255,255,255, 255), position, 10)
+    draw_all_ray(l1)
+    draw_all_ray(l2)
+    draw_all_ray(l3)
+    draw_all_ray(l4)
+    draw_all_ray(l5)
+
+    for pos_i in all_pos:
+        pygame.draw.circle(surface, (255,255,255, 255), pos_i, 4)
 
     pygame.display.flip()
     clock.tick(60)
