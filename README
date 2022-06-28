@@ -9,3 +9,5 @@ Objects in the game can be created using Block class. The Class has attributes:
 An environment is created via the Map class. Place the block objects into the map during initialization
 
 When the script runs, the player is the transmitter. The player can move forward and backwards using WASD and rotate the beam of light using UP arrow and DOWN arrow keys
+
+To start, run either point_source.py or parallel_rays.py
